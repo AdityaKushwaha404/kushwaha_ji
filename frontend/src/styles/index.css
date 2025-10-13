@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- THEME TOKENS ---------- */
+:root{
+  --bg-1:#ffffff; --bg-2:#f8fafc;
+  --text:#0f172a; --muted:#6b7280;
+  --primary:#0f766e; --accent:#06b6d4;
+  --card:rgba(255,255,255,0.88); --card-border:rgba(15,118,110,0.10);
+  --shadow:0 18px 48px rgba(15,17,26,0.10);
+}
+.theme-emerald{ --primary:#059669; --accent:#34d399; --bg-2:#effdf6; }
+.theme-night{ --primary:#4f46e5; --accent:#60a5fa; --bg-2:#eef2ff; }
+.theme-dark{
+  --bg-1:#0b1020; --bg-2:#0f172a; --text:#e5e7eb; --muted:#a1a1aa;
+  --card:rgba(17,24,39,0.65); --card-border:rgba(255,255,255,0.08);
+  --shadow:0 20px 56px rgba(2,6,23,0.55);
+}
+
+/* ---------- BACKGROUND FX ---------- */
+@keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+html,body,#root{height:100%}
+body{
+  color:var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, var(--bg-2), transparent 60%),
+    linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+  background-size:200% 200%;
+  animation:bgShift 18s ease infinite;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+
+/* subtle noise overlay */
+.noise-overlay{
+  pointer-events:none; position:fixed; inset:0; z-index:0; opacity:.07; mix-blend:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E");
+}
+
+/* floating blobs behind content */
+.blob{
+  position:absolute; filter:blur(40px); opacity:.45; z-index:0;
+  background: radial-gradient(closest-side, var(--accent), transparent);
+  animation:float 16s ease-in-out infinite;
+}
+@keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-24px)}100%{transform:translateY(0)}}
+
+/* ---------- CARDS / ELEMENTS ---------- */
+.header-glass{background:rgba(255,255,255,0.92); border-bottom:1px solid rgba(0,0,0,0.05); backdrop-filter:blur(8px); position:sticky; top:0; z-index:30}
+.theme-dark .header-glass{background:rgba(17,24,39,0.65); border-bottom-color:rgba(255,255,255,0.08)}
+
+.glass-card{background:var(--card); border:1px solid var(--card-border); border-radius:18px; box-shadow:var(--shadow); backdrop-filter:blur(10px)}
+.glass-tile{background:rgba(255,255,255,0.97); border:1px solid rgba(0,0,0,0.05); border-radius:14px; box-shadow:0 14px 30px rgba(15,17,26,0.08)}
+.theme-dark .glass-tile{background:rgba(17,24,39,0.75); border-color:rgba(255,255,255,0.08)}
+
+.btn-primary{
+  padding:.7rem 1.1rem; border-radius:12px; color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--primary));
+  box-shadow:0 16px 28px rgba(0,0,0,.12); transition:transform .2s ease, box-shadow .2s ease;
+}
+.btn-primary:hover{ transform:translateY(-2px); box-shadow:0 24px 36px rgba(0,0,0,.16) }
+.btn-outline{ padding:.7rem 1.1rem; border-radius:12px; border:1px solid rgba(0,0,0,.1); background:rgba(255,255,255,.9) }
+.theme-dark .btn-outline{ background:rgba(17,24,39,.55); border-color:rgba(255,255,255,.12) }
+
+.kpi-number{font-weight:900; font-size:30px}
+
+/* fancy underline for links */
+.link-underline{
+  background:linear-gradient(transparent 70%, rgba(6,182,212,.35) 0);
+  transition:background-size .2s ease;
+}
+
+/* ---------- REVEAL ON SCROLL ---------- */
+.reveal{opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease}
+.reveal.visible{opacity:1; transform:translateY(0)}
+
+/* ---------- WAVES ---------- */
+.wave-top{mask:linear-gradient(#000 60%, transparent)}
+/* responsive */
+@media (max-width:1024px){ .kpi-number{font-size:24px} }
+/* Off-canvas slide-in */
+.offcanvas{
+  transform: translateX(105%);
+  transition: transform .28s ease;
+}
+/* ---------- OFF-CANVAS NAVIGATION ---------- */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Drawer overlay and animation */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.drawer-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 320px;
+  max-width: 90vw;
+  z-index: 70;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(240, 249, 255, 0.95));
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.1);
+  border-left: 1px solid rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(16px);
+  transform: translateX(100%);
+  transition: transform 0.45s ease;
+}
+.theme-dark .drawer {
+  background: rgba(17, 24, 39, 0.85);
+  border-left-color: rgba(255, 255, 255, 0.1);
+}
+.drawer.show {
+  transform: translateX(0);
+}
+
+/* Scroll lock when nav open */
+body.nav-open {
+  overflow: hidden;
+}
+
+/* ---------- SMOOTH SCROLL AND REVEALS ---------- */
+html {
+  scroll-behavior: smooth;
+}

@@ -1,103 +1,194 @@
 import React from "react";
-import Reveal from "../components/Reveal";
-import WaveDivider from "../components/WaveDivider";
-import AnimatedKPI from "../components/AnimatedKPI";
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend
+} from "recharts";
 
-export default function HomePage({ onNavigate }){
+import waterCycle from "../assets/water-cycle.jpeg";
+import recycledWater from "../assets/recycled-water.jpeg";
+import treatmentPlant from "../assets/treatment-plant.jpeg";
+import waterScarcity from "../assets/water-scarcity.jpeg";
+import waterPoster from "../assets/water.jpg";
+import waterVideo from "../assets/water-video.mp4";
+
+export default function HomePage({ onNavigate }) {
+
+  // sample chart data
+  const weeklyFlow = [
+    { day: "Mon", intake: 1000, reuse: 700 },
+    { day: "Tue", intake: 1200, reuse: 850 },
+    { day: "Wed", intake: 1400, reuse: 900 },
+    { day: "Thu", intake: 1300, reuse: 950 },
+    { day: "Fri", intake: 1600, reuse: 1100 },
+  ];
+
+  const reuseBySector = [
+    { sector: "Agriculture", value: 45 },
+    { sector: "Industry", value: 25 },
+    { sector: "Household", value: 20 },
+    { sector: "Other", value: 10 },
+  ];
+
+  const COLORS = ["#06b6d4", "#3b82f6", "#10b981", "#f59e0b"];
+
   return (
-    <div className="space-y-16">
-      {/* HERO */}
-      <section className="relative glass-card rounded-2xl p-10 md:p-14 overflow-hidden">
-        {/* subtle gradient halo */}
-        <div className="absolute -top-40 -right-40 w-[420px] h-[420px] rounded-full"
-             style={{background:"radial-gradient(closest-side, var(--accent), transparent)" , opacity:.25}} />
-        <div className="absolute -bottom-48 -left-48 w-[520px] h-[520px] rounded-full"
-             style={{background:"radial-gradient(closest-side, var(--primary), transparent)" , opacity:.22}} />
-        <Reveal>
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight">
-            Smart Water <span style={{background:"linear-gradient(135deg,var(--accent),var(--primary))", WebkitBackgroundClip:"text", color:"transparent"}}>Recovery & Reuse</span>
-          </h1>
-        </Reveal>
-        <Reveal delay={120}>
-          <p className="mt-5 text-lg text-muted max-w-3xl">
-            Monitor, design and optimize primary, secondary and tertiary treatment for safe reuse — with analytics,
-            compliance and a circular water marketplace.
-          </p>
-        </Reveal>
+    <div className="bg-slate-50 text-slate-900 min-h-screen">
+      {/* ---------------- HERO ---------------- */}
+      <header className="relative isolate h-[420px] overflow-hidden">
+        <video
+          className="absolute inset-0 h-full w-full object-cover blur-md md:blur-lg scale-105"
+          src={waterVideo}
+          poster={waterPoster}
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-slate-50" />
 
-        <Reveal delay={240}>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <button onClick={()=>onNavigate?.("dashboard")} className="btn-primary">Open Dashboard</button>
-            <button onClick={()=>onNavigate?.("process")} className="btn-outline">Design Treatment</button>
+        <div className="relative z-10 flex h-full items-center justify-center text-center px-6">
+          <div className="max-w-4xl">
+            <h1 className="text-white text-5xl font-extrabold leading-tight mb-3">
+              AquaRevive: <span className="text-cyan-300">Freshwater Recovery and Reuse System</span>
+            </h1>
+            <p className="text-slate-200 text-lg italic">
+              A smart and sustainable solution for recovering, treating, and reusing freshwater to combat water scarcity.
+            </p>
           </div>
-        </Reveal>
+        </div>
+      </header>
 
-        {/* KPI strip */}
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5">
-          <Reveal><div className="glass-tile p-6 rounded-xl">
-            <div className="text-sm text-muted">Freshwater Saved</div>
-            <div className="mt-2 kpi-number"><AnimatedKPI value={1200000} format={(v)=> (v/1000000).toFixed(1)+'M'} /> L</div>
-          </div></Reveal>
+      {/* ---------------- MISSION ---------------- */}
+      <section className="container mx-auto max-w-6xl px-6 py-12 text-center">
+        <div className="glass-card p-10 rounded-2xl">
+          <h2 className="text-4xl font-semibold text-slate-800 mb-3">
+            Mission of the Project
+          </h2>
+          <p className="text-lg italic text-slate-700">
+            To promote sustainable recovery and reuse of freshwater resources through innovative,
+            eco-friendly, and efficient water management solutions.
+          </p>
+        </div>
+      </section>
 
-          <Reveal delay={80}><div className="glass-tile p-6 rounded-xl">
-            <div className="text-sm text-muted">Reuse Rate</div>
-            <div className="mt-2 kpi-number"><AnimatedKPI value={62} suffix="%" /></div>
-          </div></Reveal>
+      {/* ---------------- 4 COLUMNS ---------------- */}
+      <section className="container mx-auto max-w-6xl px-6 py-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="glass-card p-5 rounded-2xl flex flex-col hover:shadow-lg transition">
+            <img
+              src={waterCycle}
+              alt="Water Cycle"
+              className="w-full h-40 object-cover rounded-xl"
+            />
+            <h3 className="mt-4 text-xl font-semibold text-cyan-700">Water Cycle</h3>
+            <p className="mt-2 text-slate-700 text-sm">
+              The water cycle continuously circulates water through evaporation, condensation, precipitation,
+              and infiltration — maintaining hydrologic balance across the planet.
+            </p>
+          </div>
 
-          <Reveal delay={160}><div className="glass-tile p-6 rounded-xl">
-            <div className="text-sm text-muted">Active Alerts</div>
-            <div className="mt-2 kpi-number" style={{color:"#dc2626"}}><AnimatedKPI value={3} /></div>
-          </div></Reveal>
+          <div className="glass-card p-5 rounded-2xl flex flex-col hover:shadow-lg transition">
+            <img
+              src={recycledWater}
+              alt="Recycled Water"
+              className="w-full h-40 object-cover rounded-xl"
+            />
+            <h3 className="mt-4 text-xl font-semibold text-cyan-700">Recycled Water</h3>
+            <p className="mt-2 text-slate-700 text-sm">
+              Treated wastewater purified for reuse in irrigation, industry, and cleaning — reducing demand
+              on freshwater sources and supporting circular resource use.
+            </p>
+          </div>
+
+          <div className="glass-card p-5 rounded-2xl flex flex-col hover:shadow-lg transition">
+            <img
+              src={treatmentPlant}
+              alt="Treatment Plants"
+              className="w-full h-40 object-cover rounded-xl"
+            />
+            <h3 className="mt-4 text-xl font-semibold text-cyan-700">Treatment Plants</h3>
+            <p className="mt-2 text-slate-700 text-sm">
+              Facilities that purify wastewater or raw water using physical, chemical, and biological processes
+              to make it safe for reuse or discharge.
+            </p>
+          </div>
+
+          <div className="glass-card p-5 rounded-2xl flex flex-col hover:shadow-lg transition">
+            <img
+              src={waterScarcity}
+              alt="Water Scarcity"
+              className="w-full h-40 object-cover rounded-xl"
+            />
+            <h3 className="mt-4 text-xl font-semibold text-cyan-700">Water Scarcity</h3>
+            <p className="mt-2 text-slate-700 text-sm">
+              Scarcity arises when available freshwater can't meet demand — conservation, leakage control,
+              and recycling are key strategies for resilience.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- CHARTS SECTION ---------------- */}
+      <section className="container mx-auto max-w-6xl px-6 pb-20 space-y-10">
+        <h2 className="text-3xl font-bold text-center text-slate-800">
+          Analytics Snapshot
+        </h2>
+
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          {/* Line Chart */}
+          <div className="glass-card p-6 rounded-2xl min-w-0">
+            <h3 className="text-lg font-semibold text-cyan-700 mb-4">Weekly Flow (kL)</h3>
+            <div className="h-64" style={{ minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={weeklyFlow}>
+                  <XAxis dataKey="day" tick={{ fill: "#475569" }} />
+                  <YAxis tick={{ fill: "#475569" }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="intake" stroke="#3B82F6" strokeWidth={3} />
+                  <Line type="monotone" dataKey="reuse" stroke="#06B6D4" strokeWidth={3} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Pie Chart */}
+          <div className="glass-card p-6 rounded-2xl min-w-0">
+            <h3 className="text-lg font-semibold text-cyan-700 mb-4">Reuse by Sector (%)</h3>
+            <div className="h-64" style={{ minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={reuseBySector}
+                    dataKey="value"
+                    nameKey="sector"
+                    innerRadius={50}
+                    outerRadius={90}
+                    paddingAngle={4}
+                  >
+                    {reuseBySector.map((entry, index) => (
+                      <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Legend wrapperStyle={{ color: "#334155" }} />
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
 
-        <WaveDivider className="mt-10" />
+        {/* CTA */}
+        <div className="text-center mt-10">
+          <button
+            onClick={() => onNavigate?.("analytics")}
+            className="btn-primary btn-animated"
+          >
+            View Detailed Analytics
+          </button>
+        </div>
       </section>
-
-      {/* 3 FEATURE CARDS */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Reveal><div className="glass-card p-7 rounded-2xl">
-          <div className="text-sm font-semibold" style={{color:"var(--primary)"}}>01</div>
-          <h3 className="mt-1 text-xl font-semibold">Real-time Monitoring</h3>
-          <p className="mt-2 text-sm text-muted">
-            pH, turbidity, DO, flow, TDS and ORP — clean tiles, alerts and trends for safe operations.
-          </p>
-          <a href="#" className="mt-3 inline-block link-underline text-sm">View Dashboard</a>
-        </div></Reveal>
-
-        <Reveal delay={80}><div className="glass-card p-7 rounded-2xl">
-          <div className="text-sm font-semibold" style={{color:"var(--primary)"}}>02</div>
-          <h3 className="mt-1 text-xl font-semibold">Smart Process Designer</h3>
-          <p className="mt-2 text-sm text-muted">
-            Configure Primary / Secondary / Tertiary stages and simulate effluent vs reuse targets.
-          </p>
-          <button onClick={()=>onNavigate?.("process")} className="mt-3 btn-outline text-sm">Open Designer</button>
-        </div></Reveal>
-
-        <Reveal delay={160}><div className="glass-card p-7 rounded-2xl">
-          <div className="text-sm font-semibold" style={{color:"var(--primary)"}}>03</div>
-          <h3 className="mt-1 text-xl font-semibold">Water Credit Marketplace</h3>
-          <p className="mt-2 text-sm text-muted">
-            List surplus treated water, buy credits and enable circular reuse across industries.
-          </p>
-          <button onClick={()=>onNavigate?.("marketplace")} className="mt-3 btn-outline text-sm">Explore Marketplace</button>
-        </div></Reveal>
-      </section>
-
-      {/* WHY IT MATTERS */}
-      <Reveal>
-        <section className="glass-card p-10 rounded-2xl">
-          <h3 className="text-2xl font-bold">Why it matters</h3>
-          <p className="mt-3 text-muted">
-            HydroLoop automates separation & cleaning — primary (solids), secondary (organics) and tertiary (nutrients & advanced contaminants),
-            with reuse-driven targets. Result: less abstraction, lower discharge, measurable ESG.
-          </p>
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="glass-tile p-5 rounded-xl"><div className="text-sm text-muted">Compliance</div><div className="mt-2 text-sm">Tamper-evident audit ledger & auto reports.</div></div>
-            <div className="glass-tile p-5 rounded-xl"><div className="text-sm text-muted">Optimization</div><div className="mt-2 text-sm">Tune efficiencies, energy & dosing.</div></div>
-            <div className="glass-tile p-5 rounded-xl"><div className="text-sm text-muted">Biological Safety</div><div className="mt-2 text-sm">eDNA snapshots & microbial checks.</div></div>
-          </div>
-        </section>
-      </Reveal>
     </div>
   );
 }

@@ -1,161 +1,206 @@
-import React, { useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { saveSimulation, exportCsv } from "../services/mockApi";
+// src/components/TreatmentSimulator.jsx
+import React, { useState, useMemo, useCallback } from "react";
 
-const reuseTargets = {
-  "Irrigation (non-food)": { turbidity: 30, BOD: 30, TN: 15 },
-  "Industrial Cooling":    { turbidity: 10, BOD: 10, TN: 10 },
-  "Process Water":         { turbidity: 5,  BOD: 5,  TN: 5  },
-  "Recharge (strict)":     { turbidity: 1,  BOD: 2,  TN: 1  },
-};
+/**
+ * TreatmentSimulator
+ * - interactive simulator UI with sliders and number inputs
+ * - single `simulate` function defined with useCallback to avoid duplication
+ */
+export default function TreatmentSimulator({ onSimulate }) {
+  // influent
+  const [influent, setInfluent] = useState({
+    turbidity: 120,
+    BOD: 200,
+    TN: 45,
+    flow: 1000, // m3/day
+    reusePurpose: "Irrigation (non-food)",
+  });
 
-const defaults = {
-  primary: { turbidity: 60, BOD: 30, TN: 5 },
-  secondary:{ turbidity: 20, BOD: 70, TN: 40 },
-  tertiary:{ turbidity: 90, BOD: 90, TN: 80 },
-};
+  // stage efficiencies (percent removals)
+  const [eff, setEff] = useState({
+    primary: { turbidity: 60, bod: 30, tn: 5 },
+    secondary: { turbidity: 20, bod: 70, tn: 40 },
+    tertiary: { turbidity: 90, bod: 90, tn: 80 },
+  });
 
-const apply = (v,p)=> +(v*(1-p/100)).toFixed(2);
+  // single simulate function (useCallback so refs stable)
+  const simulate = useCallback(() => {
+    const seq = ["primary", "secondary", "tertiary"];
+    let out = { turbidity: influent.turbidity, BOD: influent.BOD, TN: influent.TN };
+    const results = [{ label: "Influent", turbidity: Math.round(out.turbidity), BOD: Math.round(out.BOD), TN: Math.round(out.TN) }];
 
-export default function TreatmentSimulator(){
-  const [influent, setInfluent] = useState({ turbidity:120, BOD:200, TN:45 });
-  const [eff, setEff] = useState(defaults);
-  const [reuse, setReuse] = useState("Irrigation (non-food)");
-  const [res, setRes] = useState(null);
+    seq.forEach((stage) => {
+      const e = eff[stage];
+      out = {
+        turbidity: out.turbidity * (1 - e.turbidity / 100),
+        BOD: out.BOD * (1 - e.bod / 100),
+        TN: out.TN * (1 - e.tn / 100),
+      };
+      results.push({
+        label: stage.charAt(0).toUpperCase() + stage.slice(1),
+        turbidity: Math.round(out.turbidity),
+        BOD: Math.round(out.BOD),
+        TN: Math.round(out.TN),
+      });
+    });
 
-  const run = ()=>{
-    const p = { turbidity:apply(influent.turbidity, eff.primary.turbidity), BOD:apply(influent.BOD, eff.primary.BOD), TN:apply(influent.TN, eff.primary.TN) };
-    const s = { turbidity:apply(p.turbidity, eff.secondary.turbidity), BOD:apply(p.BOD, eff.secondary.BOD), TN:apply(p.TN, eff.secondary.TN) };
-    const t = { turbidity:apply(s.turbidity, eff.tertiary.turbidity), BOD:apply(s.BOD, eff.tertiary.BOD), TN:apply(s.TN, eff.tertiary.TN) };
-    setRes({ influent, primary:p, secondary:s, tertiary:t });
-  };
+    return results;
+  }, [influent, eff]);
 
-  const chartData = res ? [
-    { name:"Influent", ...res.influent },
-    { name:"Primary",  ...res.primary  },
-    { name:"Secondary",...res.secondary},
-    { name:"Tertiary", ...res.tertiary },
-  ] : [];
+  // precompute last result for initial display and reactive preview
+  const preview = useMemo(() => {
+    const r = simulate();
+    return r[r.length - 1];
+  }, [simulate]);
 
-  const meets = ()=>{
-    if(!res) return null;
-    const t = reuseTargets[reuse], e = res.tertiary;
-    return { turbidity: e.turbidity<=t.turbidity, BOD:e.BOD<=t.BOD, TN:e.TN<=t.TN };
-  };
+  // small number input component
+  const NumberInput = ({ label, value, onChange, suffix }) => (
+    <div>
+      <div className="text-sm text-muted">{label}</div>
+      <div className="mt-1 flex items-center gap-2">
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="p-2 rounded border w-40"
+        />
+        {suffix && <div className="text-sm text-muted">{suffix}</div>}
+      </div>
+    </div>
+  );
 
-  const save = ()=>{
-    if(!res) return;
-    saveSimulation({ reuse, ...res });
-    alert("Simulation saved to ledger (mock).");
-  };
-
-  const download = ()=>{
-    if(!res) return;
-    const rows = [
-      { stage:"Influent", ...res.influent },
-      { stage:"Primary",  ...res.primary  },
-      { stage:"Secondary",...res.secondary},
-      { stage:"Tertiary", ...res.tertiary },
-      { target_for: reuse, turbidity_target: reuseTargets[reuse].turbidity, BOD_target: reuseTargets[reuse].BOD, TN_target: reuseTargets[reuse].TN },
-    ];
-    exportCsv(rows, "treatment_simulation_report.csv");
+  const handleSimulateClick = () => {
+    const results = simulate();
+    if (onSimulate) onSimulate(results);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Influent */}
-        <div className="glass-card p-4 rounded">
-          <div className="text-sm text-gray-500">Influent Quality</div>
-          <label className="block text-xs text-gray-500 mt-2">Turbidity (NTU)</label>
-          <input type="number" value={influent.turbidity} onChange={e=>setInfluent({...influent, turbidity:+e.target.value||0})} className="w-full mt-1 px-3 py-2 rounded border" />
-          <label className="block text-xs text-gray-500 mt-2">BOD (mg/L)</label>
-          <input type="number" value={influent.BOD} onChange={e=>setInfluent({...influent, BOD:+e.target.value||0})} className="w-full mt-1 px-3 py-2 rounded border" />
-          <label className="block text-xs text-gray-500 mt-2">Total Nitrogen (mg/L)</label>
-          <input type="number" value={influent.TN} onChange={e=>setInfluent({...influent, TN:+e.target.value||0})} className="w-full mt-1 px-3 py-2 rounded border" />
-        </div>
-
-        {/* Efficiencies */}
-        <div className="glass-card p-4 rounded">
-          <div className="text-sm text-gray-500">Stage Efficiencies (%)</div>
-          {["primary","secondary","tertiary"].map(st=>(
-            <div key={st} className="mt-3">
-              <div className="text-xs font-semibold capitalize">{st}</div>
-              {["turbidity","BOD","TN"].map(k=>(
-                <div key={k} className="flex items-center gap-2 mt-1">
-                  <input type="number" value={eff[st][k]} onChange={e=> setEff(prev=> ({...prev, [st]:{...prev[st],[k]: +e.target.value||0}}))} className="w-20 px-2 py-1 border rounded" />
-                  <span className="text-xs text-gray-500">{k}</span>
-                </div>
-              ))}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="glass-card p-6 rounded-xl">
+          <h4 className="font-semibold text-lg">Influent Quality</h4>
+          <div className="mt-4 space-y-4">
+            <NumberInput
+              label="Turbidity (NTU)"
+              value={influent.turbidity}
+              onChange={(v) => setInfluent((s) => ({ ...s, turbidity: v }))}
+            />
+            <NumberInput
+              label="BOD (mg/L)"
+              value={influent.BOD}
+              onChange={(v) => setInfluent((s) => ({ ...s, BOD: v }))}
+            />
+            <NumberInput
+              label="Total Nitrogen (mg/L)"
+              value={influent.TN}
+              onChange={(v) => setInfluent((s) => ({ ...s, TN: v }))}
+            />
+            <NumberInput
+              label="Flow (m³/day)"
+              value={influent.flow}
+              onChange={(v) => setInfluent((s) => ({ ...s, flow: v }))}
+            />
+            <div>
+              <div className="text-sm text-muted">Reuse Purpose</div>
+              <select
+                value={influent.reusePurpose}
+                onChange={(e) => setInfluent((s) => ({ ...s, reusePurpose: e.target.value }))}
+                className="p-2 rounded border w-full mt-1"
+              >
+                <option>Irrigation (non-food)</option>
+                <option>Industrial cooling</option>
+                <option>Toilet flushing</option>
+                <option>Food-processing (restricted)</option>
+              </select>
             </div>
-          ))}
+          </div>
         </div>
 
-        {/* Reuse + actions */}
-        <div className="glass-card p-4 rounded">
-          <div className="text-sm text-gray-500">Reuse Purpose</div>
-          <select value={reuse} onChange={e=>setReuse(e.target.value)} className="w-full mt-2 px-3 py-2 border rounded">
-            {Object.keys(reuseTargets).map(k=> <option key={k} value={k}>{k}</option>)}
-          </select>
-          <div className="mt-4 flex gap-2">
-            <button className="px-4 py-2 bg-primary text-white rounded" onClick={run}>Run</button>
-            <button className="px-4 py-2 border rounded" onClick={save} disabled={!res}>Save</button>
-            <button className="px-4 py-2 border rounded" onClick={download} disabled={!res}>CSV</button>
-          </div>
-          <div className="mt-4 text-xs text-gray-500">
-            Targets — Turbidity: {reuseTargets[reuse].turbidity} • BOD: {reuseTargets[reuse].BOD} • TN: {reuseTargets[reuse].TN}
+        <div className="glass-card p-6 rounded-xl">
+          <h4 className="font-semibold text-lg">Stage Efficiencies (%)</h4>
+          <div className="mt-4 space-y-4">
+            {["primary", "secondary", "tertiary"].map((stage) => (
+              <div key={stage}>
+                <div className="text-sm font-medium capitalize">{stage}</div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
+                  <div>
+                    <div className="text-xs text-muted">Turbidity</div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={eff[stage].turbidity}
+                      onChange={(e) =>
+                        setEff((s) => ({ ...s, [stage]: { ...s[stage], turbidity: Number(e.target.value) } }))
+                      }
+                    />
+                    <div className="text-sm font-semibold">{eff[stage].turbidity}%</div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs text-muted">BOD</div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={eff[stage].bod}
+                      onChange={(e) =>
+                        setEff((s) => ({ ...s, [stage]: { ...s[stage], bod: Number(e.target.value) } }))
+                      }
+                    />
+                    <div className="text-sm font-semibold">{eff[stage].bod}%</div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs text-muted">TN</div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={eff[stage].tn}
+                      onChange={(e) =>
+                        setEff((s) => ({ ...s, [stage]: { ...s[stage], tn: Number(e.target.value) } }))
+                      }
+                    />
+                    <div className="text-sm font-semibold">{eff[stage].tn}%</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {res && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="glass-card p-4 rounded">
-            <div style={{width:"100%", height:300}}>
-              <ResponsiveContainer>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="turbidity" />
-                  <Bar dataKey="BOD" />
-                  <Bar dataKey="TN" />
-                </BarChart>
-              </ResponsiveContainer>
+      {/* Simulate button + results */}
+      <div className="flex items-start gap-6">
+        <button
+          className="btn-primary"
+          onClick={handleSimulateClick}
+          title="Run simulation with current inputs"
+        >
+          Simulate
+        </button>
+
+        <div className="glass-card p-4 rounded-xl flex-1">
+          <div className="text-sm text-muted">Predicted Final Effluent (after all stages)</div>
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <div className="text-xs text-muted">Turbidity</div>
+              <div className="font-bold text-lg">{preview ? preview.turbidity : "—"} NTU</div>
+            </div>
+            <div>
+              <div className="text-xs text-muted">BOD</div>
+              <div className="font-bold text-lg">{preview ? preview.BOD : "—"} mg/L</div>
+            </div>
+            <div>
+              <div className="text-xs text-muted">Total N</div>
+              <div className="font-bold text-lg">{preview ? preview.TN : "—"} mg/L</div>
             </div>
           </div>
-          <div className="glass-card p-4 rounded">
-            <div className="text-sm text-gray-500">Numeric summary</div>
-            <table className="w-full mt-2 text-sm">
-              <thead className="text-left text-gray-500">
-                <tr><th>Stage</th><th>Turbidity</th><th>BOD</th><th>TN</th></tr>
-              </thead>
-              <tbody>
-                {["influent","primary","secondary","tertiary"].map(s=>(
-                  <tr key={s} className="border-t">
-                    <td className="py-2 capitalize">{s}</td>
-                    <td>{res[s].turbidity}</td>
-                    <td>{res[s].BOD}</td>
-                    <td>{res[s].TN}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="mt-4">
-              <div className="text-sm font-semibold">Meets target?</div>
-              {(()=>{ const ok = meets(); if(!ok) return null;
-                return (
-                  <div className="mt-2 space-y-1">
-                    <div>Turbidity: <span className={ok.turbidity?'text-green-600':'text-red-600'}>{ok.turbidity?'OK':'FAIL'}</span></div>
-                    <div>BOD: <span className={ok.BOD?'text-green-600':'text-red-600'}>{ok.BOD?'OK':'FAIL'}</span></div>
-                    <div>TN: <span className={ok.TN?'text-green-600':'text-red-600'}>{ok.TN?'OK':'FAIL'}</span></div>
-                  </div>
-                );})()}
-            </div>
-          </div>
+          <div className="text-xs text-muted mt-3">Preview auto-calculated from current inputs. Click Simulate to push results to the parent.</div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

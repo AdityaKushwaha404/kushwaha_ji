@@ -1,37 +1,37 @@
+// src/pages/ProcessDesignPage.jsx (snippet)
 import React from "react";
-import PageSection from "../components/PageSection";
 import ProcessFlow from "../components/ProcessFlow";
-import TreatmentSimulator from "../components/TreatmentSimulator";
 import StageDetailCard from "../components/StageDetailCard";
+import TreatmentSimulator from "../components/TreatmentSimulator";
 
 export default function ProcessDesignPage(){
+  const [selected, setSelected] = React.useState(null);
+  const [simResults, setSimResults] = React.useState(null);
+
   return (
     <div className="space-y-8">
-      <PageSection
-        kicker={<span className="tracking-widest text-xs text-muted">DESIGNER</span>}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <h2 className="text-2xl font-bold mb-3">Process Flow</h2>
+          <ProcessFlow selected={selected} onSelect={(k) => setSelected(k)} />
+        </div>
 
-        title="Smart Process System — Primary • Secondary • Tertiary"
-        subtitle="Configure stages and simulate effluent vs reuse targets."
-        actions={<button className="btn-primary">Save Design</button>}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="glass-card p-6 rounded-xl">
-              <h3 className="font-semibold text-xl">Process Flow</h3>
-              <div className="mt-4"><ProcessFlow /></div>
-            </div>
-            <div className="glass-card p-6 rounded-xl">
-              <h3 className="font-semibold text-xl">Simulation</h3>
-              <TreatmentSimulator />
+        <aside className="space-y-6">
+          <StageDetailCard stageKey={selected} />
+          <div className="glass-card p-4 rounded-xl">
+            <div className="text-sm text-muted">Quick Controls</div>
+            <div className="mt-3 space-y-2">
+              <button className="btn-outline w-full">Start Pilot</button>
+              <button className="btn-primary w-full">Export Design</button>
             </div>
           </div>
-          <aside className="space-y-6">
-            <StageDetailCard stage="Primary" />
-            <StageDetailCard stage="Secondary" />
-            <StageDetailCard stage="Tertiary" />
-          </aside>
-        </div>
-      </PageSection>
+        </aside>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold mb-3">Simulation</h2>
+        <TreatmentSimulator onSimulate={(r) => setSimResults(r)} />
+      </div>
     </div>
   );
 }

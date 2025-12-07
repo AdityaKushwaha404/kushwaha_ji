@@ -14,10 +14,11 @@ export default function ThemeProvider({ children }) {
     localStorage.setItem("swrr_theme", theme);
     localStorage.setItem("swrr_dark", String(dark));
     const cls = document.documentElement.classList;
-    // remove old classes
+    // remove old theme-* classes (optional visual themes)
     THEMES.forEach(t => cls.remove(`theme-${t}`));
     cls.add(`theme-${theme}`);
-    if (dark) cls.add("theme-dark"); else cls.remove("theme-dark");
+    // Tailwind dark mode relies on the 'dark' class on the root
+    if (dark) cls.add("dark"); else cls.remove("dark");
   }, [theme, dark]);
 
   return (

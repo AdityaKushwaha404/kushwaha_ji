@@ -51,13 +51,32 @@ body{
 .header-glass{background:rgba(255,255,255,0.92); border-bottom:1px solid rgba(0,0,0,0.05); backdrop-filter:blur(8px); position:sticky; top:0; z-index:30}
 .theme-dark .header-glass{background:rgba(17,24,39,0.65); border-bottom-color:rgba(255,255,255,0.08)}
 
-.glass-card{background:var(--card); border:1px solid var(--card-border); border-radius:18px; box-shadow:var(--shadow); backdrop-filter:blur(10px)}
-.glass-tile{background:rgba(255,255,255,0.97); border:1px solid rgba(0,0,0,0.05); border-radius:14px; box-shadow:0 14px 30px rgba(15,17,26,0.08)}
+.glass-card{background:var(--card); border:1px solid var(--card-border); border-radius:18px; box-shadow:var(--shadow); backdrop-filter:blur(10px); transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s; will-change: transform; transform-origin: center; transform: translateZ(0)}
+.glass-tile{background:rgba(255,255,255,0.97); border:1px solid rgba(0,0,0,0.05); border-radius:14px; box-shadow:0 14px 30px rgba(15,17,26,0.08); transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s; will-change: transform; transform-origin: center; transform: translateZ(0)}
 .theme-dark .glass-tile{background:rgba(17,24,39,0.75); border-color:rgba(255,255,255,0.08)}
+
+/* Global hover scale + shadow for boxes */
+.glass-card:hover, .glass-tile:hover { transform: scale(1.04) translateZ(0); box-shadow: 0 22px 44px rgba(6,182,212,0.12) }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glass-card, .glass-tile { transition: none }
+  .glass-card:hover, .glass-tile:hover { transform: none }
+}
+
+/* Fallback: scale child content when parent has inline transforms (e.g., GSAP) */
+.hover-scale { perspective: 1000px; transform-style: preserve-3d }
+.hover-scale > * { transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s; will-change: transform; transform-origin: center; }
+.hover-scale:hover > * { transform: scale(1.04) }
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-scale > * { transition: none }
+  .hover-scale:hover > * { transform: none }
+}
 
 .btn-primary{
   padding:.7rem 1.1rem; border-radius:12px; color:#fff;
-  background:linear-gradient(135deg,var(--accent),var(--primary));
+  background:linear-gradient(135deg, var(--accent), var(--primary));
   box-shadow:0 16px 28px rgba(0,0,0,.12); transition:transform .2s ease, box-shadow .2s ease;
 }
 .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 24px 36px rgba(0,0,0,.16) }
@@ -65,6 +84,20 @@ body{
 .theme-dark .btn-outline{ background:rgba(17,24,39,.55); border-color:rgba(255,255,255,.12) }
 
 .kpi-number{font-weight:900; font-size:30px}
+
+/* Brand gradient utility using theme variables */
+.bg-brand {
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+}
+
+/* Brand text gradient utility using theme variables */
+.text-gradient-brand {
+  background: linear-gradient(90deg, var(--accent), var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
 
 /* fancy underline for links */
 .link-underline{
@@ -136,6 +169,69 @@ html, body {
 .drawer-overlay.active {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* ---------- HEADING ACCENT (blue→white gradient tail) ---------- */
+.heading-accent {
+  position: relative;
+  display: inline-block;
+  line-height: 1.1;
+}
+.heading-accent::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -6px;
+  width: 42%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(59,130,246,0.35), rgba(6,182,212,0.28), rgba(255,255,255,0));
+  opacity: .9;
+  pointer-events: none;
+  transition: width .28s cubic-bezier(.2,.9,.2,1), opacity .28s;
+}
+.heading-accent:hover::after {
+  width: 56%;
+  opacity: 1;
+}
+.theme-dark .heading-accent::after {
+  background: linear-gradient(90deg, rgba(125,211,252,0.35), rgba(59,130,246,0.28), rgba(255,255,255,0));
+}
+
+/* ---------- TEXT GRADIENT (blue→cyan→white) ---------- */
+.text-gradient-blue {
+  background: linear-gradient(90deg, #2563eb 0%, #06b6d4 60%, #ffffff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.theme-dark .text-gradient-blue {
+  background: linear-gradient(90deg, #60a5fa 0%, #22d3ee 60%, #ffffff 100%);
+}
+
+/* Blue → White → Black text gradient */
+.text-gradient-bwb {
+  background: linear-gradient(90deg, #2563eb 0%, #ffffff 55%, #0f172a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.theme-dark .text-gradient-bwb {
+  background: linear-gradient(90deg, #60a5fa 0%, #ffffff 55%, #000000 100%);
+}
+
+/* Dark Blue → Blue → Light Blue text gradient */
+.text-gradient-azure {
+  background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 55%, #7dd3fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.theme-dark .text-gradient-azure {
+  background: linear-gradient(90deg, #1e40af 0%, #3b82f6 55%, #93c5fd 100%);
 }
 
 .drawer {
@@ -300,6 +396,17 @@ svg g.cursor-pointer:hover rect {
   transform: scale(0); animation: ripple .6s ease;
 }
 @keyframes ripple { to { transform: scale(6); opacity: 0; } }
+
+/* ===== Hero specific elevation utilities ===== */
+.text-soft-shadow { text-shadow: 0 1px 2px rgba(0,0,0,0.28) }
+.theme-dark .text-soft-shadow { text-shadow: 0 1px 2px rgba(0,0,0,0.45) }
+
+.btn-elevated { box-shadow: 0 12px 28px rgba(14,165,233,0.18), 0 6px 14px rgba(0,0,0,0.08) }
+.btn-elevated:hover { box-shadow: 0 18px 40px rgba(14,165,233,0.22), 0 8px 18px rgba(0,0,0,0.10) }
+.theme-dark .btn-elevated { box-shadow: 0 12px 28px rgba(59,130,246,0.22), 0 6px 14px rgba(0,0,0,0.20) }
+
+.card-elevated { box-shadow: 0 18px 48px rgba(2,6,23,0.20), 0 6px 18px rgba(2,6,23,0.10) }
+.theme-dark .card-elevated { box-shadow: 0 22px 54px rgba(0,0,0,0.45), 0 8px 20px rgba(0,0,0,0.28) }
 
 /* page transitions: needs framer-motion wrapper (no CSS required here but keep space) */
 
